@@ -1,51 +1,41 @@
 import json
 from dataclasses import dataclass
-from enum import Enum
-from typing import Dict, List
-
-class ThreatLevel(Enum):
-    LOW = 1
-    MEDIUM = 2
-    HIGH = 3
+from datetime import datetime
 
 @dataclass
-class SaaSApp:
-    name: str
-    vulnerabilities: List[str]
+class User:
+    id: int
+    active: bool
 
-class SaasVisibilityGuard:
+@dataclass
+class PricingTier:
+    price_per_user: float
+
+class SaaSVisibilityGuard:
     def __init__(self):
-        self.saaas_apps = {}
+        self.users = []
+        self.pricing_tier = PricingTier(10.0)
 
-    def add_saaas_app(self, name: str, vulnerabilities: List[str]):
-        self.saaas_apps[name] = SaaSApp(name, vulnerabilities)
+    def add_user(self, user):
+        self.users.append(user)
 
-    def detect_vulnerabilities(self, saaas_app_name: str) -> Dict[str, ThreatLevel]:
-        saaas_app = self.saaas_apps.get(saaas_app_name)
-        if saaas_app is None:
-            return {}
+    def get_active_user_count(self):
+        return sum(1 for user in self.users if user.active)
 
-        vulnerabilities = saaas_app.vulnerabilities
-        threat_levels = {}
+    def calculate_charge(self):
+        return self.get_active_user_count() * self.pricing_tier.price_per_user
 
-        for vulnerability in vulnerabilities:
-            if "SQL Injection" in vulnerability:
-                threat_levels[vulnerability] = ThreatLevel.HIGH
-            elif "Cross-Site Scripting" in vulnerability:
-                threat_levels[vulnerability] = ThreatLevel.MEDIUM
-            else:
-                threat_levels[vulnerability] = ThreatLevel.LOW
+    def edit_pricing_tier(self, new_price_per_user):
+        self.pricing_tier = PricingTier(new_price_per_user)
 
-        return threat_levels
+    def create_recurring_invoice(self):
+        invoice = {
+            "date": datetime.now().strftime("%Y-%m-%d"),
+            "charge": self.calculate_charge(),
+            "users": self.get_active_user_count()
+        }
+        return invoice
 
-    def generate_report(self, saaas_app_name: str) -> str:
-        saaas_app = self.saaas_apps.get(saaas_app_name)
-        if saaas_app is None:
-            return ""
-
-        report = f"SaaS App: {saaas_app.name}\n"
-        report += "Vulnerabilities:\n"
-        for vulnerability in saaas_app.vulnerabilities:
-            report += f"- {vulnerability}\n"
-
-        return report
+    def generate_invoice_pdf(self, invoice):
+        # Simulate generating a PDF
+        return json.dumps(invoice)
