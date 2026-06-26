@@ -1,14 +1,26 @@
 # SaaS Visibility Guard
-A Python project for managing SaaS visibility and billing.
+
+A Python project that implements a SaaS visibility guard to detect policy violations.
+
+## Features
+
+* Create, edit, and delete policy rules based on SaaS category or domain
+* Detect violations automatically
+* Send email notifications within 5 minutes of a violation detection
+* Get policy violations
+
+## Requirements
+
+* Python 3.8 or later
+
+## Installation
+
+1. Clone the repository
+2. Install the dependencies using `poetry install`
+3. Run the tests using `pytest`
 
 ## Usage
-1. Create a `SaaSVisibilityGuard` instance.
-2. Add users using the `add_user` method.
-3. Get the active user count using the `get_active_user_count` method.
-4. Calculate the charge using the `calculate_charge` method.
-5. Edit the pricing tier using the `edit_pricing_tier` method.
-6. Create a recurring invoice using the `create_recurring_invoice` method.
-7. Generate an invoice PDF using the `generate_invoice_pdf` method.
 
-## Testing
-Run the tests using `pytest`.
+1. Create a policy rule using `create_policy_rule`
+2. Detect violations using `detect_violations`
+3. Get policy violations using `get_policy_violations`
