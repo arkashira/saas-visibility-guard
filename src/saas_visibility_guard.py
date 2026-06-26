@@ -1,50 +1,42 @@
-import json
-from dataclasses import dataclass
-from datetime import datetime, timedelta
+import csv
+import dataclasses
+import datetime
+from enum import Enum
 from typing import List
 
-@dataclass
-class PolicyRule:
-    id: int
-    saas_category: str
+class UserRole(Enum):
+    COMPLIANCE_OFFICER = 1
+    ADMIN = 2
+
+@dataclasses.dataclass
+class SaaSUsage:
+    app_name: str
     domain: str
-    allowed: bool
+    users: int
+    risk_score: float
+    last_seen: datetime.date
 
 class SaaSVisibilityGuard:
-    def __init__(self):
-        self.policy_rules = []
-        self.violations = []
+    def __init__(self, saas_usage_data: List[SaaSUsage]):
+        self.saas_usage_data = saas_usage_data
 
-    def create_policy_rule(self, saas_category: str, domain: str, allowed: bool):
-        new_rule = PolicyRule(len(self.policy_rules) + 1, saas_category, domain, allowed)
-        self.policy_rules.append(new_rule)
-        return new_rule
+    def export_csv(self, start_date: datetime.date, end_date: datetime.date, user_role: UserRole) -> str:
+        if user_role != UserRole.COMPLIANCE_OFFICER:
+            raise PermissionError("Only compliance officers can export CSV")
 
-    def edit_policy_rule(self, rule_id: int, saas_category: str = None, domain: str = None, allowed: bool = None):
-        for rule in self.policy_rules:
-            if rule.id == rule_id:
-                if saas_category:
-                    rule.saas_category = saas_category
-                if domain:
-                    rule.domain = domain
-                if allowed is not None:
-                    rule.allowed = allowed
-                return rule
-        raise ValueError("Policy rule not found")
+        filtered_data = [usage for usage in self.saas_usage_data if start_date <= usage.last_seen <= end_date]
 
-    def delete_policy_rule(self, rule_id: int):
-        self.policy_rules = [rule for rule in self.policy_rules if rule.id != rule_id]
+        csv_data = [
+            ["app_name", "domain", "users", "risk_score", "last_seen"],
+            *[[usage.app_name, usage.domain, usage.users, usage.risk_score, usage.last_seen] for usage in filtered_data]
+        ]
 
-    def detect_violations(self, saas_applications: List[dict]):
-        for app in saas_applications:
-            for rule in self.policy_rules:
-                if app["saas_category"] == rule.saas_category and app["domain"] == rule.domain and not rule.allowed:
-                    self.violations.append({"app": app, "rule": rule})
-                    self.send_email_notification(app, rule)
+        csv_string = "\n".join([",".join(map(str, row)) for row in csv_data])
 
-    def send_email_notification(self, app: dict, rule: PolicyRule):
-        # Simulate sending an email notification
-        print(f"Email notification sent: {app['name']} is not allowed in {rule.saas_category}")
+        return csv_string
 
-    def get_policy_violations(self):
-        return self.violations
+    def get_saas_usage(self, start_date: datetime.date, end_date: datetime.date, user_role: UserRole) -> List[SaaSUsage]:
+        if user_role != UserRole.COMPLIANCE_OFFICER:
+            raise PermissionError("Only compliance officers can view SaaS usage")
+
+        return [usage for usage in self.saas_usage_data if start_date <= usage.last_seen <= end_date]
